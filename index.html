@@ -111,6 +111,23 @@
     border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: var(--shadow-card);
   }
   .form .email-row { grid-column: 1 / -1; display: flex; gap: 8px; }
+  .who-switch { grid-column: 1 / -1; position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 14px; background: var(--panel); }
+  .who-switch .thumb {
+    position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 10px;
+    background: var(--blue); box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 6px 16px -6px rgba(0,104,249,.6);
+    transition: transform .4s cubic-bezier(.3,1.25,.5,1);
+  }
+  .who-switch[data-type="freelancer"] .thumb { transform: translateX(100%); }
+  .who-switch button {
+    position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+    height: 44px; border: 0; border-radius: 10px; background: transparent; cursor: pointer;
+    font: 600 14.5px var(--body); color: var(--ink-2); transition: color .25s;
+  }
+  .who-switch button:hover { color: var(--ink); }
+  .who-switch button[aria-checked="true"] { color: #fff; }
+  .who-switch button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .who-switch svg { width: 17px; height: 17px; }
+  .who-switch small { font: 500 10.5px var(--mono); letter-spacing: .04em; opacity: .7; }
   .form input {
     flex: 1; min-width: 0; height: 50px; padding: 0 18px; border: 1px solid transparent; border-radius: 14px; outline: 0;
     background: var(--panel); font: 400 16px var(--body); color: var(--ink);
@@ -140,7 +157,7 @@
   .tabs { display: flex; justify-content: center; gap: 4px; margin: 0 auto 18px; padding: 5px; width: max-content; max-width: 100%; border-radius: 999px; background: rgba(255,255,255,.7); box-shadow: var(--shadow-utility); overflow-x: auto; scrollbar-width: none; }
   .tabs::-webkit-scrollbar { display: none; }
   .tab {
-    position: relative; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 18px; border: 0; border-radius: 999px;
+    position: relative; flex: none; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 18px; border: 0; border-radius: 999px;
     background: transparent; color: var(--ink-2); font: 500 14.5px var(--body); cursor: pointer; white-space: nowrap; overflow: hidden;
     transition: color .2s, background .2s;
   }
@@ -434,6 +451,11 @@
 
       <div class="join" id="join">
         <form class="form" data-form novalidate>
+          <div class="who-switch" role="radiogroup" aria-label="I'm joining as" data-type="business">
+            <span class="thumb" aria-hidden="true"></span>
+            <button type="button" role="radio" aria-checked="true" data-type="business"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>Business</button>
+            <button type="button" role="radio" aria-checked="false" data-type="freelancer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.2-4 4.2-6 8-6s6.8 2 8 6"/></svg>Freelancer</button>
+          </div>
           <label for="first1" class="sr">First name</label>
           <input id="first1" type="text" name="firstName" placeholder="First name" autocomplete="given-name" required>
           <label for="last1" class="sr">Last name</label>
@@ -662,6 +684,11 @@
       <p class="sub">Join the waitlist for early access and founding-member perks.</p>
       <div class="join">
         <form class="form" data-form novalidate>
+          <div class="who-switch" role="radiogroup" aria-label="I'm joining as" data-type="business">
+            <span class="thumb" aria-hidden="true"></span>
+            <button type="button" role="radio" aria-checked="true" data-type="business"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>Business</button>
+            <button type="button" role="radio" aria-checked="false" data-type="freelancer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.2-4 4.2-6 8-6s6.8 2 8 6"/></svg>Freelancer</button>
+          </div>
           <label for="first2" class="sr">First name</label>
           <input id="first2" type="text" name="firstName" placeholder="First name" autocomplete="given-name" required>
           <label for="last2" class="sr">Last name</label>
@@ -692,11 +719,36 @@
 <script>
   /*
    * Waitlist submissions.
-   * Set WAITLIST_ENDPOINT to a form backend (e.g. Formspree, Getform, Google Apps Script,
-   * or your own API) that accepts a JSON POST of { firstName, lastName, email }. Each signup
-   * is also kept in this browser's localStorage under the key "steeplify_waitlist".
+   * Each audience has its own endpoint (e.g. a separate Formspree form), so businesses and
+   * freelancers land in separate lists. Every signup is a JSON POST of
+   * { accountType, firstName, lastName, email } and is also kept in this browser's
+   * localStorage under the key "steeplify_waitlist".
+   * To split freelancers into their own Formspree form, replace the freelancer URL below.
    */
-  const WAITLIST_ENDPOINT = "https://formspree.io/f/xqpplgbj";
+  const WAITLIST_ENDPOINTS = {
+    business: "https://formspree.io/f/xqpplgbj",
+    freelancer: "https://formspree.io/f/xqpplgbj"
+  };
+  const ACCOUNT_LABELS = { business: "Business", freelancer: "Freelancer" };
+  let accountType = "business";
+
+  /* Business / Freelancer slider: both forms stay in sync */
+  function setAccountType(type) {
+    accountType = type;
+    document.querySelectorAll(".who-switch").forEach(sw => {
+      sw.dataset.type = type;
+      sw.querySelectorAll("button").forEach(b => b.setAttribute("aria-checked", b.dataset.type === type));
+    });
+  }
+  document.querySelectorAll(".who-switch").forEach(sw => {
+    sw.querySelectorAll("button").forEach(b => b.addEventListener("click", () => setAccountType(b.dataset.type)));
+    sw.addEventListener("keydown", e => {
+      if (!["ArrowLeft", "ArrowRight"].includes(e.key)) return;
+      e.preventDefault();
+      setAccountType(accountType === "business" ? "freelancer" : "business");
+      sw.querySelector(`[data-type="${accountType}"]`).focus();
+    });
+  });
 
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -729,6 +781,7 @@
       e.preventDefault();
       const btn = form.querySelector("button");
       const entry = {
+        accountType: ACCOUNT_LABELS[accountType],
         firstName: fields.firstName.value.trim(),
         lastName: fields.lastName.value.trim(),
         email: fields.email.value.trim().toLowerCase()
@@ -750,14 +803,15 @@
       const label = btn.innerHTML;
       btn.textContent = "Joining…";
       try {
-        if (WAITLIST_ENDPOINT) {
-          const res = await fetch(WAITLIST_ENDPOINT, {
+        const endpoint = WAITLIST_ENDPOINTS[accountType];
+        if (endpoint) {
+          const res = await fetch(endpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json", "Accept": "application/json" },
             body: JSON.stringify({
               ...entry,
               name: entry.firstName + " " + entry.lastName,
-              _subject: "New Steeplify waitlist signup: " + entry.firstName + " " + entry.lastName
+              _subject: `New Steeplify ${entry.accountType.toLowerCase()} signup: ${entry.firstName} ${entry.lastName}`
             })
           });
           if (!res.ok) throw new Error("bad status");
