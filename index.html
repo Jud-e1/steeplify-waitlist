@@ -723,11 +723,10 @@
    * freelancers land in separate lists. Every signup is a JSON POST of
    * { accountType, firstName, lastName, email } and is also kept in this browser's
    * localStorage under the key "steeplify_waitlist".
-   * To split freelancers into their own Formspree form, replace the freelancer URL below.
    */
   const WAITLIST_ENDPOINTS = {
     business: "https://formspree.io/f/xqpplgbj",
-    freelancer: "https://formspree.io/f/xqpplgbj"
+    freelancer: "https://formspree.io/f/xbggknwy"
   };
   const ACCOUNT_LABELS = { business: "Business", freelancer: "Freelancer" };
   let accountType = "business";
